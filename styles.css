@@ -1,0 +1,71 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: 1000px;
+  margin: auto;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.slider-container {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.dashboard {
+  display: flex;
+  gap: 20px;
+}
+
+.student-list {
+  flex: 1;
+}
+
+.student-list ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.student-list li {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  cursor: pointer;
+}
+
+.student-list li:hover {
+  background-color: #f0f0f0;
+}
+
+.student-list li.at-risk {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.student-list li.at-risk-predicted {
+  background-color: #cce5ff;
+  color: #004085;
+}
+
+.at-risk-doublefail {
+  background-color: #fff3cd; /* light yellow */
+  color: #856404; /* dark yellow/brown text */
+}
+
+.prediction-details {
+  flex: 2;
+  border: 1px solid #ddd;
+  padding: 10px;
+  position: relative;
+}
+
+#gradeChart, #oddsChart {
+  margin-top: 20px;
+}
