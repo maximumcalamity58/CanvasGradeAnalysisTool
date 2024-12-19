@@ -154,17 +154,17 @@ header h1 {
   border-radius: 4px;
 }
 
-.at-risk ul li.blue-student {
-  background-color: rgba(230, 240, 255, 0.8); /* Matte blue for predicted to fail */
-  color: #004085;
+.at-risk ul li.yellow-student {
+  background-color: rgba(245, 250, 220, 0.8); /* Matte blue for predicted to fail */
+  color: #a1a10d;
 }
 
 .at-risk ul li:hover {
   background-color: rgba(255, 200, 200, 0.9); /* Slightly darker hover effect for red */
 }
 
-.at-risk ul li.blue-student:hover {
-  background-color: rgba(200, 220, 255, 0.9); /* Slightly darker hover effect for blue */
+.at-risk ul li.yellow-student:hover {
+  background-color: rgba(235, 240, 200, 0.9); /* Slightly darker hover effect for blue */
 }
 
 /* Chart Sections */

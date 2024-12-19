@@ -3,6 +3,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const max_input_len = 40;
   let scaler = {};
   let session;
+  let students = [];
+  let globalCurrentCount = 30;
   let classPerformanceChart = null;
   let gradeDistributionChart = null;
 
@@ -28,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function initializeDashboard() {
     try {
       const studentsResponse = await fetch("../data/students.json");
-      const students = await studentsResponse.json();
+      students = await studentsResponse.json();
 
       const scalerResponse = await fetch("../data/scaler.json");
       scaler = await scalerResponse.json();
@@ -36,33 +38,71 @@ document.addEventListener("DOMContentLoaded", () => {
       session = await ort.InferenceSession.create("../data/grade_prediction_model.onnx");
       console.log("Model loaded successfully.");
 
-      const metrics = calculateMetrics(students, total_assignments);
-
-      document.getElementById("averageGrade").textContent = metrics.averageGrade.toFixed(2);
-
-      await populateRiskStudents(students, total_assignments);
-
-      renderClassPerformanceChart(metrics.performance);
-      renderGradeDistributionChart(metrics.gradeDistribution);
-
-      setupGlobalSlider(students);
+      await updateDashboard(globalCurrentCount);
+      setupGlobalSlider();
     } catch (error) {
       console.error("Failed to initialize dashboard:", error);
     }
   }
 
-  function calculateMetrics(students, currentCount) {
+  async function predictForStudent(student, currentCount) {
+    const allAssignments = student.all_assignments.slice(0, currentCount);
+    const inputGrades = allAssignments.map((a) => a.grade);
+
+    // Pad input to length 40
+    const paddedInput = inputGrades.concat(Array(max_input_len - currentCount).fill(0));
+
+    // Scale input using the scaler
+    const scaledInput = paddedInput.map((v, i) =>
+      (v - scaler.mean[i]) / scaler.scale[i]
+    );
+
+    const inputTensor = new ort.Tensor("float32", new Float32Array(scaledInput), [1, max_input_len]);
+
+    try {
+      const results = await session.run({ input: inputTensor });
+      const predictionsScaled = results.output.data;
+
+      // Rescale predictions to original grade range
+      const predictedFuture = Array.from(predictionsScaled).map(
+        (val, i) => val * scaler.scale[i] + scaler.mean[i]
+      );
+
+      return predictedFuture;
+    } catch (error) {
+      console.error(`Prediction failed for ${student.name}:`, error);
+      return null;
+    }
+  }
+
+  async function updateDashboard(currentCount) {
     const totalStudents = students.length;
     let totalGrade = 0;
     let passing = 0;
     let failing = 0;
     let predictedFailing = 0;
-
     const gradeDistribution = new Array(11).fill(0);
 
-    students.forEach((student) => {
-      const assignments = student.all_assignments.slice(0, currentCount);
-      const currentGrade = calculateWeightedAverage(assignments);
+    const redList = document.getElementById("redStudents");
+    const blueList = document.getElementById("blueStudents");
+    redList.innerHTML = "";
+    blueList.innerHTML = "";
+
+    for (const student of students) {
+      const predictedGrades = await predictForStudent(student, currentCount);
+
+      if (!predictedGrades) continue;
+
+      // Map predictions back to assignments
+      const actualAssignments = student.all_assignments.slice(0, currentCount);
+      const predictedAssignments = student.all_assignments.map((a, i) => {
+        if (i < currentCount) return { ...a };
+        return { ...a, grade: predictedGrades[i - currentCount] };
+      });
+
+      // Calculate current and predicted grades
+      const currentGrade = calculateWeightedAverage(actualAssignments);
+      const predictedFinalGrade = calculateWeightedAverage(predictedAssignments);
 
       totalGrade += currentGrade;
 
@@ -72,86 +112,47 @@ document.addEventListener("DOMContentLoaded", () => {
         passing++;
       }
 
-      if (student.predicted_final_grade < 60) {
-        predictedFailing++;
+      if (predictedFinalGrade < 60) {
+        if (currentGrade >= 60) {
+          console.log(`${student.name} classified as "Predicted to Fail"`);
+          predictedFailing++;
+        }
       }
 
       const gradeIndex = Math.min(10, Math.floor(currentGrade / 10));
       gradeDistribution[gradeIndex]++;
-    });
 
-    return {
-      averageGrade: totalGrade / totalStudents,
-      performance: { passing, failing, predictedFailing },
-      gradeDistribution,
-    };
-  }
-
-  async function populateRiskStudents(students, currentCount) {
-    const redList = document.getElementById("redStudents");
-    const blueList = document.getElementById("blueStudents");
-    redList.innerHTML = "";
-    blueList.innerHTML = "";
-
-    for (const student of students) {
-      // Predict assignments and grades up to currentCount
-      const predictedAssignments = await predictForStudent(student, currentCount);
-      const currentGrade = calculateWeightedAverage(
-        student.all_assignments.slice(0, currentCount)
-      );
-      const predictedFinalGrade = calculateWeightedAverage(predictedAssignments);
-
+      // Update risk lists
+      const isDoubleFail = currentGrade >= 60 && predictedFinalGrade < 60;
       const li = document.createElement("li");
-      li.textContent = `${student.name} - Grade: ${currentGrade.toFixed(2)}`;
-      li.style.cursor = "pointer";
+      li.textContent = `${student.name} - Current Grade: ${currentGrade.toFixed(2)}`;
 
-      li.addEventListener("click", () => {
-        alert(`Clicked on: ${student.name}`);
-      });
-
-      if (predictedFinalGrade < 60) {
-        console.log(currentGrade + " " + predictedFinalGrade)
-      }
-
-      // Classify students as red or blue
       if (currentGrade < 60) {
         li.classList.add("red-student");
         redList.appendChild(li);
       } else if (predictedFinalGrade < 60) {
-        li.classList.add("blue-student");
+        li.classList.add("yellow-student");
         blueList.appendChild(li);
       }
-    }
-  }
 
-  async function predictForStudent(student, currentCount) {
-    const allAssignments = student.all_assignments.slice(0, currentCount);
-    const futureCount = total_assignments - currentCount;
-    const inputGrades = allAssignments.map((a) => a.grade);
+      // Add click event listener to navigate to student list
+      li.addEventListener("click", () => {
+          // Store the student ID in localStorage
+          localStorage.setItem("selectedStudentId", student.id);
 
-    const paddedInput = inputGrades.concat(Array(max_input_len - currentCount).fill(0));
-    const scaledInput = paddedInput.map((v, i) =>
-      (v - scaler.mean[i]) / scaler.scale[i]
-    );
-
-    const inputTensor = new ort.Tensor("float32", new Float32Array(scaledInput), [1, max_input_len]);
-
-    let predictionsScaled;
-    try {
-      const results = await session.run({ input: inputTensor });
-      predictionsScaled = results.output.data;
-    } catch (error) {
-      console.error(`Prediction failed for ${student.name}:`, error);
-      return null;
+          // Navigate to the student list page
+          window.location.href = "../html/student_list.html";
+      });
     }
 
-    const predictedFutureScaled = Array.from(predictionsScaled).slice(0, futureCount);
-    const predictedFuture = predictedFutureScaled.map(
-      (val, i) => val * scaler.scale[max_input_len + i] + scaler.mean[max_input_len + i]
-    );
+    console.log(`Sidebar Data: Passing: ${passing}, Failing: ${failing}, Predicted to Fail: ${predictedFailing}`);
 
-    return allAssignments.concat(predictedFuture.map((grade) => ({ grade })));
+    document.getElementById("averageGrade").textContent = (totalGrade / totalStudents).toFixed(2);
+
+    renderClassPerformanceChart({ passing, failing, predictedFailing });
+    renderGradeDistributionChart(gradeDistribution);
   }
+
 
   function renderClassPerformanceChart(performance) {
     const ctx = document.getElementById("classPerformanceChart").getContext("2d");
@@ -165,12 +166,8 @@ document.addEventListener("DOMContentLoaded", () => {
         labels: ["Passing", "Failing", "Predicted to Fail"],
         datasets: [
           {
-            data: [
-              performance.passing,
-              performance.failing,
-              performance.predictedFailing,
-            ],
-            backgroundColor: ["#28a745", "#dc3545", "#007bff"],
+            data: [performance.passing, performance.failing, performance.predictedFailing],
+            backgroundColor: ["#28a745", "#dc3545", "#ecec00"],
           },
         ],
       },
@@ -179,13 +176,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderGradeDistributionChart(gradeDistribution) {
     const ctx = document.getElementById("gradeDistributionChart").getContext("2d");
-
-    // Destroy the existing chart instance if it exists
     if (gradeDistributionChart) {
       gradeDistributionChart.destroy();
     }
 
-    // Create a new chart instance
     gradeDistributionChart = new Chart(ctx, {
       type: "bar",
       data: {
@@ -199,37 +193,31 @@ document.addEventListener("DOMContentLoaded", () => {
         ],
       },
       options: {
-        maintainAspectRatio: false, // Ensures the chart respects container size
-        responsive: true,          // Makes the chart adapt to container size
+        maintainAspectRatio: false,
+        responsive: true,
         plugins: {
           legend: {
-            display: true,        // Show the legend
-            position: "bottom",   // Position the legend at the bottom
+            display: true,
+            position: "bottom",
           },
         },
         scales: {
           y: {
-            beginAtZero: true,    // Ensure the y-axis starts at zero
+            beginAtZero: true,
           },
         },
       },
     });
   }
 
-  function setupGlobalSlider(students) {
+  function setupGlobalSlider() {
     const slider = document.getElementById("globalCurrentCountSlider");
     const sliderValue = document.getElementById("globalCurrentCountValue");
 
     slider.addEventListener("input", async () => {
-      const currentCount = parseInt(slider.value);
-      sliderValue.textContent = currentCount.toString();
-
-      const metrics = calculateMetrics(students, currentCount);
-      renderClassPerformanceChart(metrics.performance);
-      renderGradeDistributionChart(metrics.gradeDistribution);
-      document.getElementById("averageGrade").textContent = metrics.averageGrade.toFixed(2);
-
-      await populateRiskStudents(students, currentCount);
+      globalCurrentCount = parseInt(slider.value);
+      sliderValue.textContent = globalCurrentCount.toString();
+      await updateDashboard(globalCurrentCount);
     });
   }
 

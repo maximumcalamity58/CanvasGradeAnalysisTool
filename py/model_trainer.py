@@ -1,7 +1,11 @@
 import subprocess
 import sys
 import os
+import time
 import webbrowser
+from http.server import SimpleHTTPRequestHandler
+from socketserver import TCPServer
+import threading
 
 # Function to install missing packages
 def install_missing_packages(packages):
@@ -13,10 +17,10 @@ def install_missing_packages(packages):
             subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
 # Install required packages
-required_packages = ['pandas', 'numpy', 'json', 'torch', 'scikit-learn']
+required_packages = ['pandas', 'numpy', 'torch', 'scikit-learn']
 install_missing_packages(required_packages)
 
-# Your original code starts here
+# Imports after installation
 import pandas as pd
 import numpy as np
 import json
@@ -45,7 +49,7 @@ max_output_len = 40
 
 # Generate Synthetic Grades
 assignments = []
-for i in range(1, num_assignments+1):
+for i in range(1, num_assignments + 1):
     assignment = {
         'name': f'Assignment {i}',
         'type': np.random.choice(assignment_types),
@@ -55,7 +59,7 @@ for i in range(1, num_assignments+1):
 
 data = []
 students_dict = {}
-for student_id in range(1, num_students+1):
+for student_id in range(1, num_students + 1):
     skill_level = np.random.uniform(0.5, 1.5)
     student_assignments = []
     for assignment in assignments:
@@ -73,7 +77,6 @@ for student_id in range(1, num_students+1):
             'assignment_type': assignment['type'],
             'grade': round(final_grade)
         })
-    student_assignments = sorted(student_assignments, key=lambda x: x['assignment_name'])
     students_dict[student_id] = student_assignments
 
 df = pd.DataFrame(data)
@@ -97,6 +100,7 @@ for student_id, assignments_list in students_dict.items():
         "final_grade": round(final_grade_weighted, 2)
     })
 
+os.makedirs('../data', exist_ok=True)
 with open('../data/students.json', 'w') as f:
     json.dump(students_data, f, indent=4)
 
@@ -105,14 +109,14 @@ X_list = []
 Y_list = []
 for s in students_data:
     all_grades = [a['grade'] for a in s['all_assignments']]
-    for currentCount in range(min_current, max_current+1):
+    for currentCount in range(min_current, max_current + 1):
         input_grades = all_grades[:currentCount]
         future_grades = all_grades[currentCount:]
 
         # Pad input to length 40
-        input_padded = input_grades + [0]*(max_input_len - currentCount)
+        input_padded = input_grades + [0] * (max_input_len - currentCount)
         # Pad output to length 40
-        output_padded = future_grades + [0]*(max_output_len - len(future_grades))
+        output_padded = future_grades + [0] * (max_output_len - len(future_grades))
 
         X_list.append(input_padded)
         Y_list.append(output_padded)
@@ -125,7 +129,7 @@ scaler = StandardScaler()
 combined_scaled = scaler.fit_transform(combined)
 
 X_scaled = combined_scaled[:, :max_input_len]
-Y_scaled = combined_scaled[:, max_input_len:max_input_len+max_output_len]
+Y_scaled = combined_scaled[:, max_input_len:max_input_len + max_output_len]
 
 with open('../data/scaler.json', 'w') as f:
     json.dump({"mean": scaler.mean_.tolist(), "scale": scaler.scale_.tolist()}, f)
@@ -165,8 +169,8 @@ for epoch in range(epochs):
     loss = criterion(predictions, y_train_tensor)
     loss.backward()
     optimizer.step()
-    if (epoch+1) % 10 == 0:
-        print(f"Epoch {epoch+1}/{epochs}, Loss: {loss.item()}")
+    if (epoch + 1) % 10 == 0:
+        print(f"Epoch {epoch + 1}/{epochs}, Loss: {loss.item()}")
 
 torch.save(model.state_dict(), '../data/grade_prediction_model.pth')
 dummy_input = torch.randn(1, input_size)
@@ -183,11 +187,20 @@ torch.onnx.export(
     opset_version=11
 )
 
-# Open index.html in the default web browser
-index_path = os.path.abspath('../html/index.html')
-if os.path.exists(index_path):
-    print(f"Opening {index_path} in your default web browser...")
-    browser = webbrowser.get()
-    browser.open(f'file://{index_path}', new=2)
-else:
-    print("index.html not found. Please make sure it exists in the same directory.")
+# Start HTTP server and open the page
+def start_http_server():
+    os.chdir('../')
+    handler = SimpleHTTPRequestHandler
+    with TCPServer(("", 8000), handler) as httpd:
+        print("Serving on port 8000...")
+        httpd.serve_forever()
+
+server_thread = threading.Thread(target=start_http_server, daemon=True)
+server_thread.start()
+
+index_url = "http://localhost:8000/html/index.html"
+print(f"Opening {index_url} in your default web browser...")
+webbrowser.open(index_url)
+
+while True:
+    time.sleep(1)

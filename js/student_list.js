@@ -19,22 +19,34 @@ let oddsChartInstance = null;
 let globalCurrentCount = 30; // default
 
 async function loadResources() {
-  try {
-    const studentResponse = await fetch("../data/students.json");
-    students = await studentResponse.json();
+    try {
+        const studentResponse = await fetch("../data/students.json");
+        students = await studentResponse.json();
 
-    const scalerResponse = await fetch("../data/scaler.json");
-    scaler = await scalerResponse.json();
+        const scalerResponse = await fetch("../data/scaler.json");
+        scaler = await scalerResponse.json();
 
-    session = await ort.InferenceSession.create("../data/grade_prediction_model.onnx");
-    console.log("Model loaded successfully.");
+        session = await ort.InferenceSession.create("../data/grade_prediction_model.onnx");
+        console.log("Model loaded successfully.");
 
-    populateStudentList();
-    setupGlobalSlider();
-    await updateAllStudentsHighlight(globalCurrentCount); // initial highlight and sidebar update
-  } catch (error) {
-    console.error("Failed to load data or model:", error);
-  }
+        populateStudentList();
+        setupGlobalSlider();
+
+        // Check if a student ID was passed from the dashboard
+        const selectedStudentId = localStorage.getItem("selectedStudentId");
+        if (selectedStudentId) {
+            const student = students.find(s => s.id === parseInt(selectedStudentId));
+            if (student) {
+                selectStudent(student); // Pre-select the student
+            }
+            // Clear the selectedStudentId to prevent re-selection
+            localStorage.removeItem("selectedStudentId");
+        }
+
+        await updateAllStudentsHighlight(globalCurrentCount); // Initial highlight and sidebar update
+    } catch (error) {
+        console.error("Failed to load data or model:", error);
+    }
 }
 
 function calculateWeightedAverage(assignments) {
