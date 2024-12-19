@@ -4,12 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Student Grade Predictor</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="../css/student_list.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
-  <script src="script.js" defer></script>
+  <script src="../js/student_list.js" defer></script>
 </head>
+
 <body>
+
   <div class="container">
     <h1>Student Grade Predictor</h1>
     <!-- Global slider at the top -->
@@ -22,15 +24,16 @@
     <div class="dashboard">
       <div class="student-list">
         <h2>Students</h2>
-        <ul id="studentList"></ul>
+        <ul id="studentList">
+          <!-- Dynamic student list will populate here -->
+        </ul>
       </div>
       <div class="prediction-details">
-        <h2>Prediction</h2>
         <div id="details">
           <p>Select a student to see predictions.</p>
         </div>
         <canvas id="gradeChart" width="600" height="200" style="display:none;"></canvas>
-        <canvas id="oddsChart" width="300" height="300" style="display:none; margin-top:20px;"></canvas>
+        <canvas id="oddsChart" width="300" height="300" style="margin-top:20px;"></canvas>
       </div>
     </div>
   </div>

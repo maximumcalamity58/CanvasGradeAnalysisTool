@@ -1,3 +1,22 @@
+import subprocess
+import sys
+import os
+import webbrowser
+
+# Function to install missing packages
+def install_missing_packages(packages):
+    for package in packages:
+        try:
+            __import__(package)
+        except ImportError:
+            print(f"Installing {package}...")
+            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+# Install required packages
+required_packages = ['pandas', 'numpy', 'json', 'torch', 'scikit-learn']
+install_missing_packages(required_packages)
+
+# Your original code starts here
 import pandas as pd
 import numpy as np
 import json
@@ -78,7 +97,7 @@ for student_id, assignments_list in students_dict.items():
         "final_grade": round(final_grade_weighted, 2)
     })
 
-with open('students.json', 'w') as f:
+with open('../data/students.json', 'w') as f:
     json.dump(students_data, f, indent=4)
 
 # Prepare training data for variable currentCount (0 to 40)
@@ -108,7 +127,7 @@ combined_scaled = scaler.fit_transform(combined)
 X_scaled = combined_scaled[:, :max_input_len]
 Y_scaled = combined_scaled[:, max_input_len:max_input_len+max_output_len]
 
-with open('scaler.json', 'w') as f:
+with open('../data/scaler.json', 'w') as f:
     json.dump({"mean": scaler.mean_.tolist(), "scale": scaler.scale_.tolist()}, f)
 
 X_train, X_test, y_train, y_test = train_test_split(X_scaled, Y_scaled, test_size=0.2, random_state=42)
@@ -149,12 +168,12 @@ for epoch in range(epochs):
     if (epoch+1) % 10 == 0:
         print(f"Epoch {epoch+1}/{epochs}, Loss: {loss.item()}")
 
-torch.save(model.state_dict(), 'grade_prediction_model.pth')
+torch.save(model.state_dict(), '../data/grade_prediction_model.pth')
 dummy_input = torch.randn(1, input_size)
 torch.onnx.export(
     model,
     dummy_input,
-    "grade_prediction_model.onnx",
+    "../data/grade_prediction_model.onnx",
     input_names=["input"],
     output_names=["output"],
     dynamic_axes={
@@ -163,3 +182,12 @@ torch.onnx.export(
     },
     opset_version=11
 )
+
+# Open index.html in the default web browser
+index_path = os.path.abspath('../html/index.html')
+if os.path.exists(index_path):
+    print(f"Opening {index_path} in your default web browser...")
+    browser = webbrowser.get()
+    browser.open(f'file://{index_path}', new=2)
+else:
+    print("index.html not found. Please make sure it exists in the same directory.")

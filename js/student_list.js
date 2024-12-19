@@ -20,13 +20,13 @@ let globalCurrentCount = 30; // default
 
 async function loadResources() {
   try {
-    const studentResponse = await fetch("students.json");
+    const studentResponse = await fetch("../data/students.json");
     students = await studentResponse.json();
 
-    const scalerResponse = await fetch("scaler.json");
+    const scalerResponse = await fetch("../data/scaler.json");
     scaler = await scalerResponse.json();
 
-    session = await ort.InferenceSession.create("grade_prediction_model.onnx");
+    session = await ort.InferenceSession.create("../data/grade_prediction_model.onnx");
     console.log("Model loaded successfully.");
 
     populateStudentList();
@@ -177,9 +177,13 @@ function updateChart(allAssignments, predictedAssignments, currentCount) {
 }
 
 function updateOddsChart(odds_of_failing) {
-  const ctx = document.getElementById('oddsChart').getContext('2d');
-  document.getElementById('oddsChart').style.display = 'block';
+  const canvas = document.getElementById("oddsChart");
+  const ctx = canvas.getContext("2d");
 
+  // Clear the canvas before redrawing
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Destroy the existing chart instance
   if (oddsChartInstance) {
     oddsChartInstance.destroy();
   }
@@ -187,27 +191,22 @@ function updateOddsChart(odds_of_failing) {
   const failPercent = odds_of_failing * 100;
   const passPercent = 100 - failPercent;
 
+  // Create a new doughnut chart
   oddsChartInstance = new Chart(ctx, {
-    type: 'doughnut',
+    type: "doughnut",
     data: {
-      labels: ['Fail Chance', 'Pass Chance'],
-      datasets: [{
-        data: [failPercent, passPercent],
-        backgroundColor: ['#dc3545', '#28a745']
-      }]
+      labels: ["Fail Chance", "Pass Chance"],
+      datasets: [
+        {
+          data: [failPercent, passPercent],
+          backgroundColor: ["#dc3545", "#28a745"],
+        },
+      ],
     },
     options: {
       responsive: true,
-      plugins: {
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              return context.label + ': ' + context.formattedValue + '%';
-            }
-          }
-        }
-      }
-    }
+      maintainAspectRatio: false, // Prevent scaling issues
+    },
   });
 }
 

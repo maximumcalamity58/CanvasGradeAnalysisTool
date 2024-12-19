@@ -1,0 +1,220 @@
+/* Load Futura Bold Font */
+@font-face {
+  font-family: 'Futura';
+  src: url('../assets/futura/futura medium bt.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* General Styles */
+body {
+  font-family: Futura, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #fdf5e6; /* Light tan background */
+  overflow: hidden; /* Prevent vertical scrolling */
+  background: linear-gradient(#f6eae1 1px, transparent 1px),
+              linear-gradient(90deg, #f6eae1 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-color: #fdf5e6; /* Light tan background */
+}
+
+/* Sidebar */
+.sidebar {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.6) 0%,
+    rgba(245, 245, 245, 0.6) 100%
+  ); /* Semi-transparent gradient */
+  border-right: 1px solid rgba(0, 0, 0, 0.1); /* Subtle border */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Shadow to lift the effect */
+  width: 80px;
+  height: 100vh;
+  padding: 10px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar li {
+  width: 100%;
+}
+
+.sidebar a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  background-color: rgba(255, 255, 255, 0.8); /* Matte white */
+  border-radius: 10px;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+  margin: 5px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.sidebar a:hover {
+  background-color: rgba(255, 255, 255, 1); /* Solid white on hover */
+}
+
+.sidebar a img.icon {
+  width: 32px;
+  height: 32px;
+  filter: grayscale(100%);
+  transition: filter 0.2s ease;
+}
+
+.sidebar a:hover img.icon {
+  filter: grayscale(0%) contrast(150%);
+}
+
+/* Dashboard Layout */
+.dashboard-container {
+  display: flex;
+  height: 100vh;
+}
+
+/* Dashboard Content */
+.dashboard-content {
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+header {
+  font-size: 20px;
+  text-align: center;
+}
+
+header h1 {
+  margin: 0;
+}
+
+.slider-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#globalCurrentCountSlider {
+  width: 25%;
+}
+
+#globalCurrentCountValue {
+  margin-top: 10px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* Grid Layout for Dashboard */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr; /* Left: At-Risk Students, Right: Charts */
+  grid-template-rows: 1fr 1fr;   /* Top: Grade Distribution, Bottom: Class Overview */
+  gap: 20px;
+  height: calc(100% - 150px); /* Adjust for header and slider height */
+}
+
+.at-risk {
+  grid-row: 1 / 3; /* Span both rows */
+  border-radius: 8px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.6) 0%,
+    rgba(240, 240, 240, 0.3) 100%
+  ); /* Frosted glass look */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+  padding: 10px;
+  overflow-y: auto; /* Enable scrolling within the box */
+}
+
+.at-risk ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.at-risk ul li {
+  padding: 10px;
+  margin-bottom: 5px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: rgba(255, 200, 200, 0.8); /* Matte red */
+  color: #721c24;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.at-risk ul li.blue-student {
+  background-color: rgba(230, 240, 255, 0.8); /* Matte blue for predicted to fail */
+  color: #004085;
+}
+
+.at-risk ul li:hover {
+  background-color: rgba(255, 200, 200, 0.9); /* Slightly darker hover effect for red */
+}
+
+.at-risk ul li.blue-student:hover {
+  background-color: rgba(200, 220, 255, 0.9); /* Slightly darker hover effect for blue */
+}
+
+/* Chart Sections */
+.chart-wrapper {
+  border-radius: 8px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.7) 0%,
+    rgba(240, 240, 240, 0.3) 80%
+  ); /* Frosted glass look */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+  padding: 6%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden; /* Prevent overflow */
+}
+
+.chart-wrapper canvas {
+  width: 100%; /* Use full width of the container */
+  height: 100%; /* Use full height of the container */
+  max-height: inherit; /* Inherit the max height from the parent */
+  max-width: inherit; /* Inherit the max width from the parent */
+  display: block;
+}
+
+.chart-wrapper:first-of-type {
+  grid-column: 2 / 3;
+  grid-row: 1 / 2;
+  overflow: hidden; /* Prevent overflow */
+}
+
+.chart-wrapper:last-of-type {
+  grid-column: 2 / 3;
+  grid-row: 2 / 3;
+  overflow: hidden; /* Prevent overflow */
+}
+
+.chart-wrapper h2 {
+  margin: 1.25%;
+  padding: 0;
+}
+
+.chart-wrapper p {
+  margin: 1%;
+  padding: 0;
+}
+
+/* Grade Distribution Labels */
+.chart-wrapper:first-of-type canvas {
+  padding-bottom: 10px; /* Ensure labels fit within the chart area */
+}
