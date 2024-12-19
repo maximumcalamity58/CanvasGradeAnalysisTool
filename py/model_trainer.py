@@ -17,7 +17,7 @@ def install_missing_packages(packages):
             subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
 # Install required packages
-required_packages = ['pandas', 'numpy', 'torch', 'scikit-learn']
+required_packages = ['pandas', 'numpy', 'torch', 'scikit-learn', 'onnx']
 install_missing_packages(required_packages)
 
 # Imports after installation
