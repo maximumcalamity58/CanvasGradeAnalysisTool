@@ -24,7 +24,7 @@ The primary components of the project include:
 2. **Open in VS Code**: Launch VS Code and open the project folder.  
 3. **Install Python Plugin**: If not already installed, add the Python plugin to VS Code.  
 4. **Trust the Folder**: If prompted, choose to trust the workspace folder.  
-5. **Run the Script**: Execute tpython main` script within VS Code. This will:  
+5. **Run the Script**: Execute the main.py script within VS Code. This will:  
    - Automatically install all required dependencies (this may take a few minutes)  
    - Train the model on the generated synthetic data  
    - Export the trained model to ONNX format  
@@ -35,8 +35,8 @@ The primary components of the project include:
 
 ### 2. Using Command Prompt (cmd)
 1. **Download and Extract**: Download the project from GitHub and unzip it into your desired directory.  
-2. **Navigate in cmd**: Open a command prompt and ucd path/to/project/fol` to move into the project directory.  
-3. **Run the Script**: Execute the commapython main`. This will run the main script, which:  
+2. **Navigate in cmd**: Open a command prompt and use `cd path/to/project/folder` to move into the project directory.  
+3. **Run the Script**: Execute the command `python main.py` This will run the main script, which:  
    - Installs all required dependencies  
    - Trains the model on generated data  
    - Exports the model to ONNX format  
