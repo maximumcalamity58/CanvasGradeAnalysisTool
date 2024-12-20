@@ -80,7 +80,7 @@ for student_id in range(1, num_students + 1):
     students_dict[student_id] = student_assignments
 
 df = pd.DataFrame(data)
-df.to_csv('generated_grades.csv', index=False)
+df.to_csv('/data/generated_grades.csv', index=False)
 
 # Compute weighted actual final grade for all 40 assignments
 students_data = []
