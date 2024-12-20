@@ -47,6 +47,10 @@ max_current = 40
 max_input_len = 40
 max_output_len = 40
 
+# Ensure the data folder is created before saving files
+data_dir = 'data'  # Relative path
+os.makedirs(data_dir, exist_ok=True)
+
 # Generate Synthetic Grades
 assignments = []
 for i in range(1, num_assignments + 1):
@@ -80,7 +84,7 @@ for student_id in range(1, num_students + 1):
     students_dict[student_id] = student_assignments
 
 df = pd.DataFrame(data)
-df.to_csv('/data/generated_grades.csv', index=False)
+df.to_csv(os.path.join(data_dir, 'generated_grades.csv'), index=False)
 
 # Compute weighted actual final grade for all 40 assignments
 students_data = []
@@ -100,8 +104,7 @@ for student_id, assignments_list in students_dict.items():
         "final_grade": round(final_grade_weighted, 2)
     })
 
-os.makedirs('/data', exist_ok=True)
-with open('data/students.json', 'w') as f:
+with open(os.path.join(data_dir, 'students.json'), 'w') as f:
     json.dump(students_data, f, indent=4)
 
 # Prepare training data for variable currentCount (0 to 40)
@@ -131,7 +134,7 @@ combined_scaled = scaler.fit_transform(combined)
 X_scaled = combined_scaled[:, :max_input_len]
 Y_scaled = combined_scaled[:, max_input_len:max_input_len + max_output_len]
 
-with open('data/scaler.json', 'w') as f:
+with open(os.path.join(data_dir, 'scaler.json'), 'w') as f:
     json.dump({"mean": scaler.mean_.tolist(), "scale": scaler.scale_.tolist()}, f)
 
 X_train, X_test, y_train, y_test = train_test_split(X_scaled, Y_scaled, test_size=0.2, random_state=42)
@@ -172,12 +175,12 @@ for epoch in range(epochs):
     if (epoch + 1) % 10 == 0:
         print(f"Epoch {epoch + 1}/{epochs}, Loss: {loss.item()}")
 
-torch.save(model.state_dict(), '/data/grade_prediction_model.pth')
+torch.save(model.state_dict(), os.path.join(data_dir, 'grade_prediction_model.pth'))
 dummy_input = torch.randn(1, input_size)
 torch.onnx.export(
     model,
     dummy_input,
-    "/data/grade_prediction_model.onnx",
+    os.path.join(data_dir, 'grade_prediction_model.onnx'),
     input_names=["input"],
     output_names=["output"],
     dynamic_axes={
