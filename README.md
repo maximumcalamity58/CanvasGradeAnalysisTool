@@ -1,4 +1,3 @@
-# Project README
 # Grade Prediction Dashboard 
 
 This project demonstrates the generation of synthetic student grade data, the training of a predictive model using a simple neural network, and the visualization of both the data and model predictions on an interactive dashboard.
