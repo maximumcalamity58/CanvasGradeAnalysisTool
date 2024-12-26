@@ -1,64 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Class Dashboard</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Single-Subject Class Dashboard</title>
   <link rel="stylesheet" href="../css/styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
   <script src="../js/dashboard.js" defer></script>
 </head>
-
 <body>
-  <div class="dashboard-container">
-    <nav class="sidebar">
-      <ul>
-        <li>
-          <a href="../html/index.html">
-            <img src="../icons/home.svg" alt="Home" class="icon" />
-          </a>
-        </li>
-        <li>
-          <a href="../html/student_list.html">
-            <img src="../icons/student_list.svg" alt="Student List" class="icon" />
-          </a>
-        </li>
-      </ul>
-    </nav>
-    <main class="dashboard-content">
-      <header>
-        <h1>Class Dashboard</h1>
-        <div class="slider-container">
-          <label for="globalCurrentCountSlider">Number of Current Assignments (0 to 40):</label>
-          <input type="range" id="globalCurrentCountSlider" min="0" max="40" value="30" />
-          <span id="globalCurrentCountValue"></span>
-        </div>
-      </header>
-      <div class="dashboard-grid">
-        <!-- At-Risk Students -->
-        <section class="at-risk">
-          <h2>At-Risk Students</h2>
-          <ul id="blueStudents"></ul>
-          <ul id="redStudents"></ul>
-        </section>
+  <div class="container">
+    <h1>Class Dashboard (Single Subject)</h1>
 
-        <!-- Grade Distribution -->
-        <section class="chart-wrapper">
-          <h2>Grade Distribution</h2>
-          <canvas id="gradeDistributionChart"></canvas>
-        </section>
+    <div class="slider-container">
+      <label for="assignmentsSlider">Number of Completed Assignments:</label>
+      <input type="range" id="assignmentsSlider" min="0" max="50" value="10"/>
+      <span id="sliderValue">10</span>
+    </div>
 
-        <!-- Class Overview -->
-        <section class="chart-wrapper">
-          <h2>Class Overview</h2>
-          <p>Average Grade: <span id="averageGrade">N/A</span></p>
-          <canvas id="classPerformanceChart"></canvas>
-        </section>
+    <p>Average Grade: <span id="avgGrade">--</span></p>
+
+    <div class="charts">
+      <div class="chart-box">
+        <h3>Grade Distribution</h3>
+        <canvas id="gradeDistChart"></canvas>
       </div>
-    </main>
+      <div class="chart-box">
+        <h3>Pass vs. Fail</h3>
+        <canvas id="passFailChart"></canvas>
+      </div>
+    </div>
+
+    <div class="at-risk">
+      <h3>At-Risk Students (Current < 60%)</h3>
+      <ul id="riskList"></ul>
+    </div>
   </div>
 </body>
-
 </html>
